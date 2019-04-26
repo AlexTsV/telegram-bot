@@ -4,7 +4,9 @@ from telegram.ext import Updater
 from telegram.ext import CommandHandler
 from telegram.ext import MessageHandler
 from telegram.ext import Filters
-from config import TG_TOKEN
+
+TG_TOKEN = '758306079:AAEAL86jzh6_eowV8Ay6gTQ2cLUmNIrbujk'
+
 
 def start(bot: Bot, update: Update):
     bot.send_message(chat_id=update.message.chat_id, text='Privet')
@@ -13,7 +15,6 @@ def start(bot: Bot, update: Update):
 def echo(bot: Bot, update: Update):
     text = update.message.text
     bot.send_message(chat_id=update.message.chat_id, text=text)
-
 
 
 def main():

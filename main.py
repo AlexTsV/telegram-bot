@@ -9,7 +9,7 @@ TG_TOKEN = '758306079:AAEAL86jzh6_eowV8Ay6gTQ2cLUmNIrbujk'
 
 
 def start(bot: Bot, update: Update):
-    bot.send_message(chat_id=update.message.chat_id, text='Privet')
+    bot.send_message(chat_id=update.message.chat_id, text='Я в разработке')
 
 
 def echo(bot: Bot, update: Update):

@@ -13,8 +13,10 @@ def start(bot: Bot, update: Update):
 
 
 def echo(bot: Bot, update: Update):
-    text = update.message.text
-    bot.send_message(chat_id=update.message.chat_id, text=text)
+    chat_id = update.message.chat_id
+    chat_name = update.message.chat.first_name
+    text = f'Привет, {chat_name}'
+    bot.send_message(chat_id=chat_id, text=text)
 
 
 def main():

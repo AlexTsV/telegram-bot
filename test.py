@@ -14,12 +14,12 @@ logger = logging.getLogger(__name__)
 
 CHOOSING, TYPING_REPLY, TYPING_CHOICE = range(3)
 
-reply_keyboard = [['FAQ', 'Полезные материалы'],
-                  ['Телефонная книга МСР МО'],
-                  ['Готово!']]
+reply_keyboard = [['Телефонная книга МСР МО'],
+                  ['FAQ', 'Полезные материалы'],
+                  ['Пригласить участника', 'Выход']]
 markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
 
-faq_reply = [['1C', 'AlterOS'], ['Готово']]
+faq_reply = [['1C', 'AlterOS'], ['Принтеры/печать', 'Выход']]
 faq_markup = ReplyKeyboardMarkup(faq_reply, one_time_keyboard=True)
 
 
@@ -39,6 +39,12 @@ def start(bot, update):
     return CHOOSING
 
 
+def send_invite(bot, update):
+    bot.send_message(chat_id='328978263', text='Ссылка-приглашение для новых участников: https://t.me/joinchat/CmGDh0PVJZRdJjuqcK5C8A')
+
+    # return ConversationHandler.END
+
+
 def phonebook_choice(bot, update, user_data):
     text = update.message.text
     user_data['choice'] = text
@@ -50,7 +56,7 @@ def phonebook_choice(bot, update, user_data):
 
 def faq_choice(bot, update, user_data):
     update.message.reply_text(
-        "Выбери раздел",
+        "Выбери подраздел",
         reply_markup=faq_markup)
 
     return CHOOSING
@@ -59,14 +65,7 @@ def faq_choice(bot, update, user_data):
 def faq_alteros_choice(bot, update, user_data):
     text = update.message.text
     user_data['choice'] = text
-    with psycopg2.connect("dbname=telebot user=postgres password=123") as conn:
-        with conn.cursor() as cur:
-            cur.execute("""SELECT * FROM materials""")
-            res = cur.fetchall()
-            message = ''
-            for i in res:
-                message = message + str(i[0]) + '. ' + i[1] + ' ' + i[2] + ' ' + '\n'
-            update.message.reply_text(message)
+    update.message.reply_text('ALTEROS_FAQ')
 
     return ConversationHandler.END
 
@@ -74,14 +73,15 @@ def faq_alteros_choice(bot, update, user_data):
 def faq_1c_choice(bot, update, user_data):
     text = update.message.text
     user_data['choice'] = text
-    with psycopg2.connect("dbname=telebot user=postgres password=123") as conn:
-        with conn.cursor() as cur:
-            cur.execute("""SELECT * FROM materials""")
-            res = cur.fetchall()
-            message = ''
-            for i in res:
-                message = message + str(i[0]) + '. ' + i[1] + ' ' + i[2] + ' ' + '\n'
-            update.message.reply_text(message)
+    update.message.reply_text('1C_FAQ')
+
+    return ConversationHandler.END
+
+
+def printers_choice(bot, update, user_data):
+    text = update.message.text
+    user_data['choice'] = text
+    update.message.reply_text('PRINTERS_FAQ')
 
     return ConversationHandler.END
 
@@ -137,13 +137,10 @@ def error(bot, update, error):
 
 
 def main():
-    # Create the Updater and pass it your bot's token.
-    updater = Updater("758306079:AAEAL86jzh6_eowV8Ay6gTQ2cLUmNIrbujk")
+    # updater = Updater("758306079:AAEAL86jzh6_eowV8Ay6gTQ2cLUmNIrbujk")
 
-    # Get the dispatcher to register handlers
     dp = updater.dispatcher
 
-    # Add conversation handler with the states GENDER, PHOTO, LOCATION and BIO
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
 
@@ -152,7 +149,9 @@ def main():
                        RegexHandler('^(FAQ)$', faq_choice, pass_user_data=True),
                        RegexHandler('^(Полезные материалы)$', materials_choice, pass_user_data=True),
                        RegexHandler('^(AlterOS)$', faq_alteros_choice, pass_user_data=True),
-                       RegexHandler('^(1C)$', faq_1c_choice, pass_user_data=True),],
+                       RegexHandler('^(1C)$', faq_1c_choice, pass_user_data=True),
+                       RegexHandler('^(Пригласить участника)$', send_invite, pass_user_data=False),
+                       RegexHandler('^(Принтеры/печать)$', printers_choice, pass_user_data=True), ],
 
             TYPING_CHOICE: [MessageHandler(Filters.text,
                                            phonebook_choice,
@@ -166,7 +165,7 @@ def main():
                            ],
         },
 
-        fallbacks=[RegexHandler('^Готово!$', done, pass_user_data=True)]
+        fallbacks=[RegexHandler('^Выход$', done, pass_user_data=True)]
     )
 
     dp.add_handler(conv_handler)
@@ -174,12 +173,8 @@ def main():
     # log all errors
     dp.add_error_handler(error)
 
-    # Start the Bot
     updater.start_polling()
 
-    # Run the bot until you press Ctrl-C or the process receives SIGINT,
-    # SIGTERM or SIGABRT. This should be used most of the time, since
-    # start_polling() is non-blocking and will stop the bot gracefully.
     updater.idle()
 
 

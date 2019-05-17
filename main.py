@@ -144,8 +144,8 @@ def insert_faq_to_db(bot, update, user_data):
             cur.execute("""INSERT INTO faq (problem, decision) values (%s, %s) returning problem, decision""",
                         (user_data['problem'],
                          user_data['decision']))
-
-            update.message.reply_text(f'Всё ОК! Запиись в БД:\n{cur.fetchall()[0]}')
+            res = cur.fetchall()
+            update.message.reply_text(f'Всё ОК!\nПроблема: {res[0][0]}\nРешение: {res[0][1]}')
     user_data.clear()
 
     return ConversationHandler.END
@@ -159,8 +159,8 @@ def insert_materials_to_db(bot, update, user_data):
             cur.execute("""INSERT INTO materials (description, url) values (%s, %s) returning description, url""",
                         (user_data['description'],
                          user_data['url']))
-
-            update.message.reply_text(f'Всё ОК! Запиись в БД:\n{cur.fetchall()[0]}')
+            res = cur.fetchall()
+            update.message.reply_text(f'Всё ОК!\nМатериал: {res[0][0]}\nСсылка: {res[0][1]}')
     user_data.clear()
 
     return ConversationHandler.END

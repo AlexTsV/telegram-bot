@@ -6,6 +6,7 @@ from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, Rege
                           ConversationHandler)
 import psycopg2
 import logging
+from add_rm_db import Postgres
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -197,6 +198,12 @@ def main():
                        RegexHandler('^(Пригласить участника)$', send_invite, pass_user_data=False),
                        ],
 
+            TYPING_REPLY: [MessageHandler(Filters.text,
+                                          received_contact,
+                                          pass_user_data=True,
+                                          ),
+                           ],
+
             FINISH_MATERIALS_TO_DB: [MessageHandler(Filters.text,
                                                     add_materials,
                                                     pass_user_data=True),
@@ -217,11 +224,19 @@ def main():
                                                     pass_user_data=True),
                                      ],
 
-            TYPING_REPLY: [MessageHandler(Filters.text,
-                                          received_contact,
+            Postgres.DELETE_FAQ: [MessageHandler(Filters.text,
+                                          Postgres.del_faq,
                                           pass_user_data=True,
                                           ),
                            ],
+
+            Postgres.DELETE_MATERIALS: [MessageHandler(Filters.text,
+                                                 Postgres.del_materials,
+                                                 pass_user_data=True,
+                                                 ),
+                                  ],
+
+
         },
 
         fallbacks=[RegexHandler('^Выход$', done, pass_user_data=True)]

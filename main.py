@@ -39,7 +39,7 @@ def start(bot, update):
 
 
 def send_invite(bot, update):
-    update.message.reply_text('Ссылка-приглашение для новых участников: https://t.me/joinchat/CmGDh0PVJZRdJjuqcK5C8A')
+    update.message.reply_text('Ссылка-приглашение для новых участников: ')
 
     return ConversationHandler.END
 
@@ -120,7 +120,7 @@ def error(bot, update, error):
 
 
 def main():
-    updater = Updater("758306079:AAEAL86jzh6_eowV8Ay6gTQ2cLUmNIrbujk")
+    updater = Updater("")
 
     dp = updater.dispatcher
 

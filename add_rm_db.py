@@ -4,39 +4,62 @@ from telegram.ext import (ConversationHandler)
 
 class Postgres:
     FINISH_FAQ_TO_DB, FINISH_MATERIALS_TO_DB, INSERT_FAQ_TO_DB, INSERT_MATERIALS_TO_DB, DELETE_MATERIALS, \
-    DELETE_FAQ = range(6)
+    DELETE_FAQ, UPDATE_PHONEBOOK = range(7)
 
-    def add_faq(bot, update, user_data):
-        if len(user_data) == 0:
-            text = update.message.text
-            user_data['decision'] = text
-            update.message.reply_text(
-                "Опиши проблему", )
+    def facts_to_str(self, user_data):
+        facts = list()
+        for key, value in user_data.items():
+            facts.append(value)
 
-            return Postgres.FINISH_FAQ_TO_DB
-        else:
-            text = update.message.text
-            user_data['problem'] = text
-            update.message.reply_text(
-                "Опиши решение", )
+        return "".join(facts)
 
-            return Postgres.INSERT_FAQ_TO_DB
+    def faq_choice(bot, update, user_data):
+        text = update.message.text
+        user_data['choice'] = text
+        with psycopg2.connect("dbname=telebot user=postgres password=123") as conn:
+            with conn.cursor() as cur:
+                cur.execute("""SELECT * FROM faq""")
+                res = cur.fetchall()
+                message = ''
+                for i in enumerate(res):
+                    message = message + str(i[0] + 1) + '. ' + i[1][1] + '\n' + 'Решение: ' + i[1][2] + ' ' + '\n'
+                update.message.reply_text(message)
 
-    def add_materials(bot, update, user_data):
-        if len(user_data) == 0:
-            text = update.message.text
-            user_data['url'] = text
-            update.message.reply_text(
-                "Введи название материала", )
+        return ConversationHandler.END
 
-            return Postgres.FINISH_MATERIALS_TO_DB
-        else:
-            text = update.message.text
-            user_data['description'] = text
-            update.message.reply_text(
-                "Пришли ссылку на материал", )
+    def materials_choice(bot, update, user_data):
+        text = update.message.text
+        user_data['choice'] = text
+        with psycopg2.connect("dbname=telebot user=postgres password=123") as conn:
+            with conn.cursor() as cur:
+                cur.execute("""SELECT * FROM materials""")
+                res = cur.fetchall()
+                message = ''
+                for i in enumerate(res):
+                    message = message + str(i[0] + 1) + '. ' + i[1][1] + ':' + ' ' + i[1][2] + ' ' + '\n'
+                update.message.reply_text(message)
 
-            return Postgres.INSERT_MATERIALS_TO_DB
+        return ConversationHandler.END
+
+    def received_contact(bot, update, user_data):
+        text = update.message.text
+        category = user_data['choice']
+        user_data[category] = text
+        del user_data['choice']
+        with psycopg2.connect("dbname=telebot user=postgres password=123") as conn:
+            with conn.cursor() as cur:
+                cur.execute("""SELECT * FROM phonebook WHERE ФИО ILIKE '%%%s%%'""" % (text,), )
+                res = cur.fetchall()
+                if len(res) > 3:
+                    update.message.reply_text(f'Уточни запрос, найдено {len(res)} записей')
+                elif len(res) != 0:
+                    for i in res:
+                        update.message.reply_text(f'\n{i[1]}\n{i[2]}\n{i[3]}\n{i[4]} доб.{i[5]}\n{i[7]}')
+                else:
+                    update.message.reply_text(f'По запросу "{text}" совпадений не найдено')
+                user_data.clear()
+
+        return ConversationHandler.END
 
     def insert_faq_to_db(bot, update, user_data):
         text = update.message.text
@@ -65,22 +88,6 @@ class Postgres:
         user_data.clear()
 
         return ConversationHandler.END
-
-    def del_faq(bot, update, user_data):
-        text = update.message.text
-        user_data['choice'] = text
-        update.message.reply_text(
-            "Введи точное описание проблемы для удаления из базы", )
-
-        return Postgres.DELETE_FAQ
-
-    def del_materials(bot, update, user_data):
-        text = update.message.text
-        user_data['choice'] = text
-        update.message.reply_text(
-            "Введи точное название материала для удаления из базы", )
-
-        return Postgres.DELETE_MATERIALS
 
     def delete_faq_from_db(bot, update, user_data):
         text = update.message.text
@@ -113,3 +120,6 @@ class Postgres:
         user_data.clear()
 
         return ConversationHandler.END
+
+    def update_phonebook(bot, update, user_data):
+        pass

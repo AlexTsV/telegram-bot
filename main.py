@@ -1,12 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-from telegram import File
 from telegram import ReplyKeyboardMarkup
-from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, RegexHandler,
-                          ConversationHandler)
-
-import psycopg2
+from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, RegexHandler, ConversationHandler)
+from telegram import File
 import logging
 from add_rm_db import Postgres
 
@@ -85,7 +81,7 @@ def del_materials(bot, update, user_data):
 
 
 def send_invite(bot, update):
-    update.message.reply_text('Ссылка-приглашение для новых участников: ')
+    update.message.reply_text('Ссылка-приглашение для новых участников: https://t.me/joinchat/CmGDh0PVJZRdJjuqcK5C8A')
 
     return ConversationHandler.END
 
@@ -121,7 +117,7 @@ def error(bot, update, error):
 
 
 def main():
-    updater = Updater("")
+    updater = Updater("758306079:AAEAL86jzh6_eowV8Ay6gTQ2cLUmNIrbujk")
 
     dp = updater.dispatcher
 

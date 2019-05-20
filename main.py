@@ -122,7 +122,7 @@ def error(bot, update, error):
 
 
 def main():
-    updater = Updater("758306079:AAEAL86jzh6_eowV8Ay6gTQ2cLUmNIrbujk")
+    updater = Updater("")
 
     dp = updater.dispatcher
 

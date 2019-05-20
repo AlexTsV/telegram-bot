@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import telegram
 from telegram import ReplyKeyboardMarkup
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, RegexHandler, ConversationHandler)
-from telegram import File
 import logging
 from add_rm_db import Postgres
 
@@ -21,6 +21,7 @@ markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
 
 
 def start(bot, update):
+    # print(bot.get_chat_administrators(update.message.chat.id))
     update.message.reply_text(
         "Привет, выбери раздел",
         reply_markup=markup)
@@ -28,22 +29,28 @@ def start(bot, update):
     return CHOOSING
 
 
+admin_list = ['Alex_tvv']
+
+
 def add_faq(bot, update, user_data):
-    if len(user_data) == 0:
-        text = update.message.text
-        user_data['decision'] = text
-        update.message.reply_text(
-            "Опиши проблему", )
+    print(update.message.from_user)
+    if update.message.from_user['username'] in admin_list:
+        if len(user_data) == 0:
+            text = update.message.text
+            user_data['decision'] = text
+            update.message.reply_text(
+                "Опиши проблему", )
 
-        return Postgres.FINISH_FAQ_TO_DB
+            return Postgres.FINISH_FAQ_TO_DB
+        else:
+            text = update.message.text
+            user_data['problem'] = text
+            update.message.reply_text(
+                "Опиши решение", )
+
+            return Postgres.INSERT_FAQ_TO_DB
     else:
-        text = update.message.text
-        user_data['problem'] = text
-        update.message.reply_text(
-            "Опиши решение", )
-
-        return Postgres.INSERT_FAQ_TO_DB
-
+        update.message.reply_text('Sorry, you must be admin')
 
 def add_materials(bot, update, user_data):
     if len(user_data) == 0:
@@ -81,7 +88,7 @@ def del_materials(bot, update, user_data):
 
 
 def send_invite(bot, update):
-    update.message.reply_text('Ссылка-приглашение для новых участников: https://t.me/joinchat/CmGDh0PVJZRdJjuqcK5C8A')
+    update.message.reply_text('Ссылка-приглашение для новых участников: ')
 
     return ConversationHandler.END
 
@@ -100,6 +107,8 @@ def update_phonebook(bot, update, user_data):
     user_data['choice'] = text
     update.message.reply_text("Пришли файл в формате 'CSV(разделители - запятые)'")
 
+    return Postgres.UPDATE_PHONEBOOK
+
 
 def done(bot, update, user_data):
     if 'choice' in user_data:
@@ -117,7 +126,7 @@ def error(bot, update, error):
 
 
 def main():
-    updater = Updater("758306079:AAEAL86jzh6_eowV8Ay6gTQ2cLUmNIrbujk")
+    updater = Updater("")
 
     dp = updater.dispatcher
 
@@ -174,8 +183,8 @@ def main():
                                                        ),
                                         ],
 
-            Postgres.UPDATE_PHONEBOOK: [MessageHandler(Filters.text,
-                                                       Postgres.update_phonebook,
+            Postgres.UPDATE_PHONEBOOK: [MessageHandler(Filters.document,
+                                                       Postgres.download_and_update_phonebook,
                                                        pass_user_data=True,
                                                        ),
                                         ],

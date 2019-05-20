@@ -1,4 +1,5 @@
 import psycopg2
+import csv
 from telegram.ext import (ConversationHandler)
 
 
@@ -91,10 +92,11 @@ class Postgres:
 
     def delete_faq_from_db(bot, update, user_data):
         text = update.message.text
+        print(text)
         user_data['choice'] = text
         with psycopg2.connect("dbname=telebot user=postgres password=123") as conn:
             with conn.cursor() as cur:
-                cur.execute("""DELETE FROM faq WHERE problem = (%s) returning problem""",
+                cur.execute("""DELETE FROM faq WHERE problem = %s returning problem""",
                             (user_data['choice'],))
                 res = cur.fetchall()
                 if len(res) != 0:
@@ -121,5 +123,33 @@ class Postgres:
 
         return ConversationHandler.END
 
-    def update_phonebook(bot, update, user_data):
-        pass
+    @staticmethod
+    def download_and_update_phonebook(bot, update, user_data):
+        file_id = update.message.document.file_id
+        bot.get_file(file_id).download('MSR_MO_IT.csv')
+        contacts_arr = list()
+        with open('MSR_MO_IT.csv', 'r', newline='') as file:
+            reader = csv.reader(file)
+            i = 0
+            while i == 0:
+                first_symbol = file.readline(1)
+                if first_symbol == '№':
+                    file.readline()
+                    i = 1
+            for row in reader:
+                str = ''.join(row)
+                cur_arr = str.split(';')
+                contacts_arr.extend([cur_arr])
+        with psycopg2.connect(dbname='telebot', user='postgres', password='123') as conn:
+            with conn.cursor() as cur:
+                cur.execute("""delete from phonebook""")
+                count = 0
+                for i in contacts_arr:
+                    cur.execute("""insert into phonebook (Подразделение, Должность, ФИО, Телефон, Вн, Комн, Почта)
+                                               values (%s, %s, %s, %s, %s, %s, %s) returning ФИО""",
+                                (i[3], i[4], i[5], i[6], i[7], i[8], i[9],))
+                    res = cur.fetchall()
+                    count += len(res)
+                update.message.reply_text(f'Записей в таблице: {count}')
+
+        return ConversationHandler.END

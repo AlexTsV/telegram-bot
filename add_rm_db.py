@@ -4,8 +4,8 @@ from telegram.ext import (ConversationHandler)
 
 
 class Postgres:
-    FINISH_FAQ_TO_DB, FINISH_MATERIALS_TO_DB, INSERT_FAQ_TO_DB, INSERT_MATERIALS_TO_DB, DELETE_MATERIALS, \
-    DELETE_FAQ, UPDATE_PHONEBOOK = range(7)
+    FINISH_FAQ_TO_DB, FINISH_MATERIALS_TO_DB, INSERT_FAQ_TO_DB, INSERT_MATERIALS_TO_DB, DELETE_MATERIALS, DELETE_FAQ, \
+    UPDATE_PHONEBOOK = range(7)
 
     def facts_to_str(self, user_data):
         facts = list()
@@ -14,9 +14,8 @@ class Postgres:
 
         return "".join(facts)
 
-    def faq_choice(bot, update, user_data):
-        text = update.message.text
-        user_data['choice'] = text
+    @staticmethod
+    def faq_choice(bot, update):
         with psycopg2.connect("dbname=telebot user=postgres password=123") as conn:
             with conn.cursor() as cur:
                 cur.execute("""SELECT * FROM faq""")
@@ -28,9 +27,8 @@ class Postgres:
 
         return ConversationHandler.END
 
-    def materials_choice(bot, update, user_data):
-        text = update.message.text
-        user_data['choice'] = text
+    @staticmethod
+    def materials_choice(bot, update):
         with psycopg2.connect("dbname=telebot user=postgres password=123") as conn:
             with conn.cursor() as cur:
                 cur.execute("""SELECT * FROM materials""")
@@ -42,11 +40,9 @@ class Postgres:
 
         return ConversationHandler.END
 
+    @staticmethod
     def received_contact(bot, update, user_data):
         text = update.message.text
-        category = user_data['choice']
-        user_data[category] = text
-        del user_data['choice']
         with psycopg2.connect("dbname=telebot user=postgres password=123") as conn:
             with conn.cursor() as cur:
                 cur.execute("""SELECT * FROM phonebook WHERE ФИО ILIKE '%%%s%%'""" % (text,), )
@@ -57,11 +53,13 @@ class Postgres:
                     for i in res:
                         update.message.reply_text(f'\n{i[1]}\n{i[2]}\n{i[3]}\n{i[4]} доб.{i[5]}\n{i[7]}')
                 else:
-                    update.message.reply_text(f'По запросу "{text}" совпадений не найдено')
+                    update.message.reply_text(
+                        f'По запросу "{text}" совпадений не найдено')
                 user_data.clear()
 
         return ConversationHandler.END
 
+    @staticmethod
     def insert_faq_to_db(bot, update, user_data):
         text = update.message.text
         user_data['decision'] = text
@@ -71,11 +69,13 @@ class Postgres:
                             (user_data['problem'],
                              user_data['decision']))
                 res = cur.fetchall()
-                update.message.reply_text(f'Всё ОК!\nПроблема: {res[0][0]}\nРешение: {res[0][1]}')
+                update.message.reply_text(
+                    f'Всё ОК!\nПроблема: {res[0][0]}\nРешение: {res[0][1]}')
         user_data.clear()
 
         return ConversationHandler.END
 
+    @staticmethod
     def insert_materials_to_db(bot, update, user_data):
         text = update.message.text
         user_data['url'] = text
@@ -85,14 +85,15 @@ class Postgres:
                             (user_data['description'],
                              user_data['url']))
                 res = cur.fetchall()
-                update.message.reply_text(f'Всё ОК!\nМатериал: {res[0][0]}\nСсылка: {res[0][1]}')
+                update.message.reply_text(
+                    f'Всё ОК!\nМатериал: {res[0][0]}\nСсылка: {res[0][1]}')
         user_data.clear()
 
         return ConversationHandler.END
 
-    def delete_faq_from_db(bot, update, user_data):
+    @staticmethod
+    def delete_faq_from_db_1(bot, update, user_data):
         text = update.message.text
-        print(text)
         user_data['choice'] = text
         with psycopg2.connect("dbname=telebot user=postgres password=123") as conn:
             with conn.cursor() as cur:
@@ -100,13 +101,16 @@ class Postgres:
                             (user_data['choice'],))
                 res = cur.fetchall()
                 if len(res) != 0:
-                    update.message.reply_text(f'Удалена запись: {res[0][0]}')
+                    update.message.reply_text(
+                        f'Удалена запись: {res[0][0]}')
                 else:
-                    update.message.reply_text(f"Проблемы {user_data['choice']} не существует в базе")
+                    update.message.reply_text(
+                        f"Такой проблемы в базе не сущетствует:\n{user_data['choice']}")
         user_data.clear()
 
         return ConversationHandler.END
 
+    @staticmethod
     def delete_materials_from_db(bot, update, user_data):
         text = update.message.text
         user_data['choice'] = text
@@ -116,9 +120,11 @@ class Postgres:
                             (user_data['choice'],))
                 res = cur.fetchall()
                 if len(res) != 0:
-                    update.message.reply_text(f'Удалена запись: {res[0][0]}')
+                    update.message.reply_text(
+                        f'Удалена запись: {res[0][0]}')
                 else:
-                    update.message.reply_text(f"Материала {user_data['choice']} не существует в базе")
+                    update.message.reply_text(
+                        f"Такого материала в базе не существует:\n{user_data['choice']}")
         user_data.clear()
 
         return ConversationHandler.END
@@ -150,6 +156,7 @@ class Postgres:
                                 (i[3], i[4], i[5], i[6], i[7], i[8], i[9],))
                     res = cur.fetchall()
                     count += len(res)
-                update.message.reply_text(f'Записей в таблице: {count}')
+                update.message.reply_text(
+                    f'Загружено контактов: {count}')
 
         return ConversationHandler.END

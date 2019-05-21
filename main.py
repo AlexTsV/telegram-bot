@@ -35,6 +35,7 @@ def start(bot, update):
         update.message.reply_text(
             'Извини ты не состоишь в группе ИТ_МСР_МО')
 
+
 def add_faq(bot, update, user_data):
     admin_id = update.message.from_user['id']
     admin_list = Postgres.get_admins()
@@ -158,10 +159,10 @@ def main():
                       CommandHandler('update_pb', update_phonebook, pass_user_data=False)],
 
         states={
-            CHOOSING: [RegexHandler('^(Телефонная книга МСР МО)$', phonebook_choice, pass_user_data=False),
-                       RegexHandler('^(FAQ)$', Postgres.faq_choice, pass_user_data=False),
-                       RegexHandler('^(Полезные материалы)$', Postgres.materials_choice, pass_user_data=False),
-                       RegexHandler('^(Пригласить участника)$', send_invite, pass_user_data=False),
+            CHOOSING: [CommandHandler('Телефонная книга МСР МО', phonebook_choice, pass_user_data=False),
+                       CommandHandler('FAQ', Postgres.faq_choice, pass_user_data=False),
+                       CommandHandler('Полезные материалы', Postgres.materials_choice, pass_user_data=False),
+                       CommandHandler('Пригласить участника', send_invite, pass_user_data=False),
                        ],
 
             TYPING_REPLY: [MessageHandler(Filters.text,

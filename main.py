@@ -24,9 +24,9 @@ markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
 
 def start(bot, update):
     user_id = update.message.from_user['id']
-    member_id_list = asyncio.get_event_loop().run_until_complete(test.get_members_list())
-    print(member_id_list)
-    if user_id in member_id_list:
+    members_list = Postgres.get_members()
+    print(members_list)
+    if user_id in members_list:
         update.message.reply_text(
             "Привет, выбери раздел",
             reply_markup=markup)

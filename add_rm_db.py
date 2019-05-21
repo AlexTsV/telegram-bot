@@ -160,3 +160,12 @@ class Postgres:
                     f'Загружено контактов: {count}')
 
         return ConversationHandler.END
+
+    @staticmethod
+    def get_members():
+        with psycopg2.connect(dbname='telebot', user='postgres', password='123') as conn:
+            with conn.cursor() as cur:
+                cur.execute("""select user_id from members where user_role = 'user'""")
+                res = cur.fetchall()
+
+                return res

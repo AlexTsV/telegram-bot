@@ -4,8 +4,8 @@ import psycopg2
 
 
 def get_members_list():
-    api_id = 780919
-    api_hash = '5e4ebadc59ba54fc060dd575a0775b92'
+    api_id =
+    api_hash = ''
 
     with TelegramClient('session_name', api_id, api_hash) as client:
         client.start()

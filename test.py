@@ -1,34 +1,34 @@
-from main import TelegramClient, sync
+from telethon import TelegramClient, sync
+from telethon.tl.types import ChannelParticipantsAdmins
+import psycopg2
 
-api_id = 780919
-api_hash = '5e4ebadc59ba54fc060dd575a0775b92'
 
-client = TelegramClient('session_name', api_id, api_hash)
-client.start()
+def get_members_list():
+    api_id = 780919
+    api_hash = '5e4ebadc59ba54fc060dd575a0775b92'
 
-channel = client.get_participants('t.me/E5vPV0PVJZTSiPhGUCKVLw')
-print(channel)
+    with TelegramClient('session_name', api_id, api_hash) as client:
+        client.start()
+        entity = client.get_entity('ИТ_МСР_МО')
+        users = client.get_participants(entity)
+        admins = client.iter_participants(entity, filter=ChannelParticipantsAdmins)
+        admin_list = list()
+        for admin in admins:
+            admin_list.append(admin.id)
+        for user in users:
+            with psycopg2.connect("dbname=telebot user=postgres password=123") as conn:
+                with conn.cursor() as cur:
+                    if user.id in admin_list:
+                        cur.execute("""INSERT INTO members (user_id, user_role) values (%s, %s)""",
+                                    (user.id, 'admin'))
+                    else:
+                        cur.execute("""INSERT INTO members (user_id, user_role) values (%s, %s)""",
+                                    (user.id, 'user'))
 
-# queryKey = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u',
-#             'v', 'w', 'x', 'y', 'z']
-# all_participants = []
-#
-# uids = []
-# for key in queryKey:
-#     offset = 0
-#     limit = 200
-#     while True:
-#         participants = await client(GetParticipantsRequest(
-#             channel, ChannelParticipantsSearch(key), offset, limit,
-#             hash=0
-#         ))
-#         if not participants.users:
-#             break
-#
-#         offset += len(participants.users)
-#         print(offset)
-#
-#         for user in participants.users:
-#             uids.append(user.id)
-#
-# uids = sorted(set(uids))
+
+
+get_members_list()
+
+
+
+

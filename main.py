@@ -4,6 +4,8 @@ from telegram import ReplyKeyboardMarkup
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, RegexHandler, ConversationHandler)
 import logging
 from add_rm_db import Postgres
+import test
+import asyncio
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -21,19 +23,23 @@ markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
 
 
 def start(bot, update):
-    # print(bot.get_chat_administrators(update.message.chat.id))
-    update.message.reply_text(
-        "Привет, выбери раздел",
-        reply_markup=markup)
+    user_id = update.message.from_user['id']
+    member_id_list = asyncio.get_event_loop().run_until_complete(test.get_members_list())
+    print(member_id_list)
+    if user_id in member_id_list:
+        update.message.reply_text(
+            "Привет, выбери раздел",
+            reply_markup=markup)
 
-    return CHOOSING
-
+        return CHOOSING
+    else:
+        update.message.reply_text(
+            'Извини ты не состоишь в группе ИТ_МСР_МО')
 
 admin_list = ['Alex_tvv']
 
 
 def add_faq(bot, update, user_data):
-    # print(update.message.from_user) USER INFO
     if update.message.from_user['username'] in admin_list:
         if len(user_data) == 0:
             text = update.message.text
@@ -122,7 +128,7 @@ def error(bot, update, error):
 
 
 def main():
-    updater = Updater("")
+    updater = Updater("758306079:AAEAL86jzh6_eowV8Ay6gTQ2cLUmNIrbujk")
 
     dp = updater.dispatcher
 

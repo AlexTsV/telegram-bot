@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import telegram
 from telegram import ReplyKeyboardMarkup
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, RegexHandler, ConversationHandler)
 import logging
@@ -12,11 +11,12 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 CHOOSING, TYPING_REPLY, Postgres.INSERT_FAQ_TO_DB, Postgres.INSERT_MATERIALS_TO_DB, Postgres.FINISH_FAQ_TO_DB, \
-Postgres.FINISH_MATERIALS_TO_DB, Postgres.DELETE_FAQ, Postgres.DELETE_MATERIALS = range(8)
+Postgres.FINISH_MATERIALS_TO_DB, Postgres.DELETE_FAQ, Postgres.DELETE_MATERIALS, Postgres.UPDATE_PHONEBOOK = range(9)
 
 reply_keyboard = [['Телефонная книга МСР МО'],
                   ['FAQ', 'Полезные материалы'],
                   ['Пригласить участника', 'Выход']]
+
 markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
 
 
@@ -33,7 +33,7 @@ admin_list = ['Alex_tvv']
 
 
 def add_faq(bot, update, user_data):
-    print(update.message.from_user)
+    # print(update.message.from_user) USER INFO
     if update.message.from_user['username'] in admin_list:
         if len(user_data) == 0:
             text = update.message.text
@@ -50,7 +50,8 @@ def add_faq(bot, update, user_data):
 
             return Postgres.INSERT_FAQ_TO_DB
     else:
-        update.message.reply_text('Sorry, you must be admin')
+        update.message.reply_text('Извини, ты должен быть админом')
+
 
 def add_materials(bot, update, user_data):
     if len(user_data) == 0:
@@ -69,18 +70,14 @@ def add_materials(bot, update, user_data):
         return Postgres.INSERT_MATERIALS_TO_DB
 
 
-def del_faq(bot, update, user_data):
-    text = update.message.text
-    user_data['choice'] = text
+def del_faq(bot, update):
     update.message.reply_text(
         "Введи точное описание проблемы для удаления из базы", )
 
     return Postgres.DELETE_FAQ
 
 
-def del_materials(bot, update, user_data):
-    text = update.message.text
-    user_data['choice'] = text
+def del_materials(bot, update):
     update.message.reply_text(
         "Введи точное название материала для удаления из базы", )
 
@@ -88,24 +85,22 @@ def del_materials(bot, update, user_data):
 
 
 def send_invite(bot, update):
-    update.message.reply_text('Ссылка-приглашение для новых участников: ')
+    update.message.reply_text(
+        'Ссылка-приглашение для новых участников: ', )
 
     return ConversationHandler.END
 
 
-def phonebook_choice(bot, update, user_data):
-    text = update.message.text
-    user_data['choice'] = text
+def phonebook_choice(bot, update):
     update.message.reply_text(
         'Введи фамилию или имя')
 
     return TYPING_REPLY
 
 
-def update_phonebook(bot, update, user_data):
-    text = update.message.text
-    user_data['choice'] = text
-    update.message.reply_text("Пришли файл в формате 'CSV(разделители - запятые)'")
+def update_phonebook(bot, update):
+    update.message.reply_text(
+        "Пришли файл в формате 'CSV(разделители - запятые)'", )
 
     return Postgres.UPDATE_PHONEBOOK
 
@@ -114,7 +109,8 @@ def done(bot, update, user_data):
     if 'choice' in user_data:
         del user_data['choice']
 
-    update.message.reply_text("До встречи!")
+    update.message.reply_text(
+        "До встречи!")
 
     user_data.clear()
     return ConversationHandler.END
@@ -134,14 +130,14 @@ def main():
         entry_points=[CommandHandler('start', start),
                       CommandHandler('add_faq', add_faq, pass_user_data=True),
                       CommandHandler('add_mat', add_materials, pass_user_data=True),
-                      CommandHandler('del_faq', del_faq, pass_user_data=True),
-                      CommandHandler('del_mat', del_materials, pass_user_data=True),
-                      CommandHandler('update_pb', update_phonebook, pass_user_data=True)],
+                      CommandHandler('del_faq', del_faq, pass_user_data=False),
+                      CommandHandler('del_mat', del_materials, pass_user_data=False),
+                      CommandHandler('update_pb', update_phonebook, pass_user_data=False)],
 
         states={
-            CHOOSING: [RegexHandler('^(Телефонная книга МСР МО)$', phonebook_choice, pass_user_data=True),
-                       RegexHandler('^(FAQ)$', Postgres.faq_choice, pass_user_data=True),
-                       RegexHandler('^(Полезные материалы)$', Postgres.materials_choice, pass_user_data=True),
+            CHOOSING: [RegexHandler('^(Телефонная книга МСР МО)$', phonebook_choice, pass_user_data=False),
+                       RegexHandler('^(FAQ)$', Postgres.faq_choice, pass_user_data=False),
+                       RegexHandler('^(Полезные материалы)$', Postgres.materials_choice, pass_user_data=False),
                        RegexHandler('^(Пригласить участника)$', send_invite, pass_user_data=False),
                        ],
 
@@ -172,7 +168,7 @@ def main():
                                               ],
 
             Postgres.DELETE_FAQ: [MessageHandler(Filters.text,
-                                                 Postgres.delete_faq_from_db,
+                                                 Postgres.delete_faq_from_db_1,
                                                  pass_user_data=True,
                                                  ),
                                   ],

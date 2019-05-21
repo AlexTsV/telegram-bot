@@ -165,7 +165,18 @@ class Postgres:
     def get_members():
         with psycopg2.connect(dbname='telebot', user='postgres', password='123') as conn:
             with conn.cursor() as cur:
-                cur.execute("""select user_id from members where user_role = 'user'""")
+                cur.execute("""select user_id from members""")
                 res = cur.fetchall()
+                res_list = [x[0] for x in res]
 
-                return res
+                return res_list
+
+    @staticmethod
+    def get_admins():
+        with psycopg2.connect(dbname='telebot', user='postgres', password='123') as conn:
+            with conn.cursor() as cur:
+                cur.execute("""select user_id from members where user_role = 'admin'""")
+                res = cur.fetchall()
+                res_list = [x[0] for x in res]
+
+                return res_list

@@ -25,7 +25,6 @@ markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
 def start(bot, update):
     user_id = update.message.from_user['id']
     members_list = Postgres.get_members()
-    print(members_list)
     if user_id in members_list:
         update.message.reply_text(
             "Привет, выбери раздел",
@@ -36,11 +35,10 @@ def start(bot, update):
         update.message.reply_text(
             'Извини ты не состоишь в группе ИТ_МСР_МО')
 
-admin_list = ['Alex_tvv']
-
-
 def add_faq(bot, update, user_data):
-    if update.message.from_user['username'] in admin_list:
+    admin_id = update.message.from_user['id']
+    admin_list = Postgres.get_admins()
+    if admin_id in admin_list:
         if len(user_data) == 0:
             text = update.message.text
             user_data['decision'] = text
@@ -60,34 +58,48 @@ def add_faq(bot, update, user_data):
 
 
 def add_materials(bot, update, user_data):
-    if len(user_data) == 0:
-        text = update.message.text
-        user_data['url'] = text
-        update.message.reply_text(
-            "Введи название материала", )
+    admin_id = update.message.from_user['id']
+    admin_list = Postgres.get_admins()
+    if admin_id in admin_list:
+        if len(user_data) == 0:
+            text = update.message.text
+            user_data['url'] = text
+            update.message.reply_text(
+                "Введи название материала", )
 
-        return Postgres.FINISH_MATERIALS_TO_DB
+            return Postgres.FINISH_MATERIALS_TO_DB
+        else:
+            text = update.message.text
+            user_data['description'] = text
+            update.message.reply_text(
+                "Пришли ссылку на материал", )
+
+            return Postgres.INSERT_MATERIALS_TO_DB
     else:
-        text = update.message.text
-        user_data['description'] = text
-        update.message.reply_text(
-            "Пришли ссылку на материал", )
-
-        return Postgres.INSERT_MATERIALS_TO_DB
+        update.message.reply_text('Извини, ты должен быть админом')
 
 
 def del_faq(bot, update):
-    update.message.reply_text(
-        "Введи точное описание проблемы для удаления из базы", )
+    admin_id = update.message.from_user['id']
+    admin_list = Postgres.get_admins()
+    if admin_id in admin_list:
+        update.message.reply_text(
+            "Введи точное описание проблемы для удаления из базы", )
 
-    return Postgres.DELETE_FAQ
-
+        return Postgres.DELETE_FAQ
+    else:
+        pass
 
 def del_materials(bot, update):
-    update.message.reply_text(
-        "Введи точное название материала для удаления из базы", )
+    admin_id = update.message.from_user['id']
+    admin_list = Postgres.get_admins()
+    if admin_id in admin_list:
+        update.message.reply_text(
+            "Введи точное название материала для удаления из базы", )
 
-    return Postgres.DELETE_MATERIALS
+        return Postgres.DELETE_MATERIALS
+    else:
+        pass
 
 
 def send_invite(bot, update):
@@ -97,18 +109,23 @@ def send_invite(bot, update):
     return ConversationHandler.END
 
 
+def update_phonebook(bot, update):
+    admin_id = update.message.from_user['id']
+    admin_list = Postgres.get_admins()
+    if admin_id in admin_list:
+        update.message.reply_text(
+            "Пришли файл в формате 'CSV(разделители - запятые)'", )
+
+        return Postgres.UPDATE_PHONEBOOK
+    else:
+        pass
+
+
 def phonebook_choice(bot, update):
     update.message.reply_text(
         'Введи фамилию или имя')
 
     return TYPING_REPLY
-
-
-def update_phonebook(bot, update):
-    update.message.reply_text(
-        "Пришли файл в формате 'CSV(разделители - запятые)'", )
-
-    return Postgres.UPDATE_PHONEBOOK
 
 
 def done(bot, update, user_data):

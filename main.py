@@ -5,6 +5,7 @@ from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, Rege
 import logging
 import asyncio
 from add_rm_db import Postgres
+import config
 import tg_api
 
 
@@ -151,7 +152,7 @@ def error(bot, update, error):
 
 
 def main():
-    updater = Updater("758306079:AAEAL86jzh6_eowV8Ay6gTQ2cLUmNIrbujk")
+    updater = Updater(config.BOT_TOKEN)
 
     dp = updater.dispatcher
 

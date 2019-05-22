@@ -1,16 +1,15 @@
 from telethon import TelegramClient, sync
 from telethon.tl.types import ChannelParticipantsAdmins
 import asyncio
+import config
 
-api_id = 780919
-api_hash = '5e4ebadc59ba54fc060dd575a0775b92'
-some_entity = 'https://t.me/joinchat/E5vPV0PVJZTSiPhGUCKVLw'
+
 
 
 async def get_admin_list():
-    async with TelegramClient('session_name', api_id, api_hash) as client:
+    async with TelegramClient('session_name', config.TG_API_ID, config.TG_API_HASH) as client:
         await client.start()
-        entity = await client.get_entity(some_entity)
+        entity = await client.get_entity(config.some_entity)
         admins = client.iter_participants(entity, filter=ChannelParticipantsAdmins)
         admin_list = list()
         async for admin in admins:

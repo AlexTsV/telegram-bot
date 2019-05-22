@@ -6,6 +6,7 @@ import logging
 from add_rm_db import Postgres
 import test
 import asyncio
+from telegram.ext.dispatcher import run_async
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -33,7 +34,7 @@ def start(bot, update):
         return CHOOSING
     else:
         update.message.reply_text(
-            'Извини ты не состоишь в группе ИТ_МСР_МО')
+            '***AUTH MEMBER: FAILED***')
 
 
 def add_faq(bot, update, user_data):
@@ -55,7 +56,7 @@ def add_faq(bot, update, user_data):
 
             return Postgres.INSERT_FAQ_TO_DB
     else:
-        update.message.reply_text('Извини, ты должен быть админом')
+        update.message.reply_text('***AUTH ADMIN: FALSE***')
 
 
 def add_materials(bot, update, user_data):
@@ -77,19 +78,21 @@ def add_materials(bot, update, user_data):
 
             return Postgres.INSERT_MATERIALS_TO_DB
     else:
-        update.message.reply_text('Извини, ты должен быть админом')
+        update.message.reply_text('***AUTH ADMIN: FALSE***')
 
 
+@run_async
 def del_faq(bot, update):
     admin_id = update.message.from_user['id']
-    admin_list = Postgres.get_admins()
+    admin_list = test.get_members_list()
     if admin_id in admin_list:
         update.message.reply_text(
             "Введи точное описание проблемы для удаления из базы", )
 
         return Postgres.DELETE_FAQ
     else:
-        pass
+        update.message.reply_text('***AUTH ADMIN: FALSE***')
+
 
 def del_materials(bot, update):
     admin_id = update.message.from_user['id']
@@ -100,7 +103,7 @@ def del_materials(bot, update):
 
         return Postgres.DELETE_MATERIALS
     else:
-        pass
+        update.message.reply_text('***AUTH ADMIN: FALSE***')
 
 
 def send_invite(bot, update):
@@ -119,7 +122,7 @@ def update_phonebook(bot, update):
 
         return Postgres.UPDATE_PHONEBOOK
     else:
-        pass
+        update.message.reply_text('***AUTH ADMIN: FALSE***')
 
 
 def phonebook_choice(bot, update):
@@ -146,7 +149,7 @@ def error(bot, update, error):
 
 
 def main():
-    updater = Updater("758306079:AAEAL86jzh6_eowV8Ay6gTQ2cLUmNIrbujk")
+    updater = Updater("")
 
     dp = updater.dispatcher
 
@@ -160,7 +163,7 @@ def main():
 
         states={
             CHOOSING: [RegexHandler('^Телефонная книга МСР МО$', phonebook_choice, pass_user_data=False),
-                       RegexHandler('^FAQ$', Postgres.faq_choice, pass_user_data=True),
+                       RegexHandler('^FAQ$', Postgres.faq_choice, pass_user_data=False),
                        RegexHandler('^Полезные материалы$', Postgres.materials_choice, pass_user_data=False),
                        RegexHandler('^Пригласить участника$', send_invite, pass_user_data=False),
                        ],

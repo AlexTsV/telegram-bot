@@ -27,7 +27,7 @@ def start(bot, update):
     members_list = Postgres.get_members()
     if user_id in members_list:
         update.message.reply_text(
-            "Привет, выбери раздел",
+            "***Активация...***",
             reply_markup=markup)
 
         return CHOOSING
@@ -134,7 +134,7 @@ def done(bot, update, user_data):
         del user_data['choice']
 
     update.message.reply_text(
-        "До встречи!")
+        "***Деактивация...***")
 
     user_data.clear()
     return ConversationHandler.END
@@ -159,10 +159,10 @@ def main():
                       CommandHandler('update_pb', update_phonebook, pass_user_data=False)],
 
         states={
-            CHOOSING: [CommandHandler('Телефонная книга МСР МО', phonebook_choice, pass_user_data=False),
-                       CommandHandler('FAQ', Postgres.faq_choice, pass_user_data=False),
-                       CommandHandler('Полезные материалы', Postgres.materials_choice, pass_user_data=False),
-                       CommandHandler('Пригласить участника', send_invite, pass_user_data=False),
+            CHOOSING: [RegexHandler('^Телефонная книга МСР МО$', phonebook_choice, pass_user_data=False),
+                       RegexHandler('^FAQ$', Postgres.faq_choice, pass_user_data=True),
+                       RegexHandler('^Полезные материалы$', Postgres.materials_choice, pass_user_data=False),
+                       RegexHandler('^Пригласить участника$', send_invite, pass_user_data=False),
                        ],
 
             TYPING_REPLY: [MessageHandler(Filters.text,

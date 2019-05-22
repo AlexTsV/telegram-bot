@@ -3,10 +3,10 @@
 from telegram import ReplyKeyboardMarkup
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, RegexHandler, ConversationHandler)
 import logging
-from add_rm_db import Postgres
-import test
 import asyncio
-from telegram.ext.dispatcher import run_async
+from add_rm_db import Postgres
+import tg_api
+
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -22,10 +22,12 @@ reply_keyboard = [['Телефонная книга МСР МО'],
 
 markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
 
+# loop = asyncio.get_event_loop()
+# admin_list = loop.run_until_complete(tg_api.get_admin_list())
 
 def start(bot, update):
     user_id = update.message.from_user['id']
-    members_list = Postgres.get_members()
+    members_list = tg_api.member_list
     if user_id in members_list:
         update.message.reply_text(
             "***Активация...***",
@@ -39,7 +41,7 @@ def start(bot, update):
 
 def add_faq(bot, update, user_data):
     admin_id = update.message.from_user['id']
-    admin_list = Postgres.get_admins()
+    admin_list = tg_api.admin_list
     if admin_id in admin_list:
         if len(user_data) == 0:
             text = update.message.text
@@ -61,7 +63,7 @@ def add_faq(bot, update, user_data):
 
 def add_materials(bot, update, user_data):
     admin_id = update.message.from_user['id']
-    admin_list = Postgres.get_admins()
+    admin_list = tg_api.admin_list
     if admin_id in admin_list:
         if len(user_data) == 0:
             text = update.message.text
@@ -81,11 +83,11 @@ def add_materials(bot, update, user_data):
         update.message.reply_text('***AUTH ADMIN: FALSE***')
 
 
-@run_async
+
+
 def del_faq(bot, update):
     admin_id = update.message.from_user['id']
-    admin_list = test.get_members_list()
-    if admin_id in admin_list:
+    if admin_id in tg_api.admin_list:
         update.message.reply_text(
             "Введи точное описание проблемы для удаления из базы", )
 
@@ -96,7 +98,7 @@ def del_faq(bot, update):
 
 def del_materials(bot, update):
     admin_id = update.message.from_user['id']
-    admin_list = Postgres.get_admins()
+    admin_list = tg_api.admin_list
     if admin_id in admin_list:
         update.message.reply_text(
             "Введи точное название материала для удаления из базы", )
@@ -115,7 +117,7 @@ def send_invite(bot, update):
 
 def update_phonebook(bot, update):
     admin_id = update.message.from_user['id']
-    admin_list = Postgres.get_admins()
+    admin_list = tg_api.admin_list
     if admin_id in admin_list:
         update.message.reply_text(
             "Пришли файл в формате 'CSV(разделители - запятые)'", )
@@ -149,7 +151,7 @@ def error(bot, update, error):
 
 
 def main():
-    updater = Updater("")
+    updater = Updater("758306079:AAEAL86jzh6_eowV8Ay6gTQ2cLUmNIrbujk")
 
     dp = updater.dispatcher
 

@@ -1,35 +1,28 @@
 from telethon import TelegramClient, sync
-from telethon.tl.types import ChannelParticipantsAdmins
+from telethon.tl.types import ChannelParticipantsAdmins, PeerChat
 import asyncio
 import config
 
 
+class Telethon:
+    @staticmethod
+    async def get_participants():
+        async with TelegramClient('session_start', config.TG_API_ID, config.TG_API_HASH) as client:
+            await client.start()
+            entity = await client.get_entity(config.CHAT_ID)
+            admins = client.iter_participants(entity, filter=ChannelParticipantsAdmins)
+            users = await client.get_participants(entity)
+            admin_list = list()
+            user_list = list()
+            async for admin in admins:
+                admin_list.append(admin.id)
+            for user in users:
+                user_list.append(user.id)
 
+            all_participants_dict = {'admins': admin_list, 'users': user_list}
 
-async def get_admin_list():
-    async with TelegramClient('session_name', config.TG_API_ID, config.TG_API_HASH) as client:
-        await client.start()
-        entity = await client.get_entity(config.some_entity)
-        admins = client.iter_participants(entity, filter=ChannelParticipantsAdmins)
-        admin_list = list()
-        async for admin in admins:
-            admin_list.append(admin.id)
-
-        return admin_list
-
-
-# async def get_member_list():
-#     async with TelegramClient('session_name', api_id, api_hash) as client:
-#         await client.start()
-#         users = await client.get_participants(some_entity)
-#         member_list = list()
-#         async for user in users:
-#             member_list.append(user.id)
-#
-#         return member_list
-
+            return all_participants_dict
 
 
 loop = asyncio.get_event_loop()
-admin_list = loop.run_until_complete(get_admin_list())
-# member_list = loop.run_until_complete(loop.run_until_complete(get_member_list()))
+participants = loop.run_until_complete(Telethon.get_participants())

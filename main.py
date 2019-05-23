@@ -3,11 +3,9 @@
 from telegram import ReplyKeyboardMarkup
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, RegexHandler, ConversationHandler)
 import logging
-import asyncio
-from add_rm_db import Postgres
+from db_app import Postgres
 import config
 import tg_api
-
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -23,12 +21,13 @@ reply_keyboard = [['Телефонная книга МСР МО'],
 
 markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
 
+
 # loop = asyncio.get_event_loop()
 # admin_list = loop.run_until_complete(tg_api.get_admin_list())
 
 def start(bot, update):
     user_id = update.message.from_user['id']
-    members_list = tg_api.member_list
+    members_list = tg_api.participants['users']
     if user_id in members_list:
         update.message.reply_text(
             "***Активация...***",
@@ -37,12 +36,12 @@ def start(bot, update):
         return CHOOSING
     else:
         update.message.reply_text(
-            '***AUTH MEMBER: FAILED***')
+            '***AUTH PARTICIPANT: FAILED***')
 
 
 def add_faq(bot, update, user_data):
     admin_id = update.message.from_user['id']
-    admin_list = tg_api.admin_list
+    admin_list = tg_api.participants['admins']
     if admin_id in admin_list:
         if len(user_data) == 0:
             text = update.message.text
@@ -59,12 +58,12 @@ def add_faq(bot, update, user_data):
 
             return Postgres.INSERT_FAQ_TO_DB
     else:
-        update.message.reply_text('***AUTH ADMIN: FALSE***')
+        update.message.reply_text('***AUTH ADMIN: FAILED***')
 
 
 def add_materials(bot, update, user_data):
     admin_id = update.message.from_user['id']
-    admin_list = tg_api.admin_list
+    admin_list = tg_api.participants['admins']
     if admin_id in admin_list:
         if len(user_data) == 0:
             text = update.message.text
@@ -81,32 +80,30 @@ def add_materials(bot, update, user_data):
 
             return Postgres.INSERT_MATERIALS_TO_DB
     else:
-        update.message.reply_text('***AUTH ADMIN: FALSE***')
-
-
+        update.message.reply_text('***AUTH ADMIN: FAILED***')
 
 
 def del_faq(bot, update):
     admin_id = update.message.from_user['id']
-    if admin_id in tg_api.admin_list:
+    if admin_id in tg_api.participants['admins']:
         update.message.reply_text(
             "Введи точное описание проблемы для удаления из базы", )
 
         return Postgres.DELETE_FAQ
     else:
-        update.message.reply_text('***AUTH ADMIN: FALSE***')
+        update.message.reply_text('***AUTH ADMIN: FAILED***')
 
 
 def del_materials(bot, update):
     admin_id = update.message.from_user['id']
-    admin_list = tg_api.admin_list
+    admin_list = tg_api.participants['admins']
     if admin_id in admin_list:
         update.message.reply_text(
             "Введи точное название материала для удаления из базы", )
 
         return Postgres.DELETE_MATERIALS
     else:
-        update.message.reply_text('***AUTH ADMIN: FALSE***')
+        update.message.reply_text('***AUTH ADMIN: FAILED***')
 
 
 def send_invite(bot, update):
@@ -118,14 +115,14 @@ def send_invite(bot, update):
 
 def update_phonebook(bot, update):
     admin_id = update.message.from_user['id']
-    admin_list = tg_api.admin_list
+    admin_list = tg_api.participants['admins']
     if admin_id in admin_list:
         update.message.reply_text(
             "Пришли файл в формате 'CSV(разделители - запятые)'", )
 
         return Postgres.UPDATE_PHONEBOOK
     else:
-        update.message.reply_text('***AUTH ADMIN: FALSE***')
+        update.message.reply_text('***AUTH ADMIN: FAILED***')
 
 
 def phonebook_choice(bot, update):

@@ -18,11 +18,11 @@ class Postgres:
     def faq_choice(bot, update):
         with psycopg2.connect("dbname=telebot user=postgres password=123") as conn:
             with conn.cursor() as cur:
-                cur.execute("""SELECT * FROM faq""")
+                cur.execute("""SELECT problem, decision FROM faq""")
                 res = cur.fetchall()
                 message = ''
                 for i in enumerate(res):
-                    message = message + str(i[0] + 1) + '. ' + i[1][1] + '\n' + 'Решение: ' + i[1][2] + ' ' + '\n'
+                    message = message + str(i[0] + 1) + '. ' + i[1][0] + '\n' + 'Решение: ' + i[1][1] + ' ' + '\n'
                 update.message.reply_text(message)
 
         return ConversationHandler.END
@@ -31,11 +31,11 @@ class Postgres:
     def materials_choice(bot, update):
         with psycopg2.connect("dbname=telebot user=postgres password=123") as conn:
             with conn.cursor() as cur:
-                cur.execute("""SELECT * FROM materials""")
+                cur.execute("""SELECT description, url FROM materials""")
                 res = cur.fetchall()
                 message = ''
                 for i in enumerate(res):
-                    message = message + str(i[0] + 1) + '. ' + i[1][1] + ':' + ' ' + i[1][2] + ' ' + '\n'
+                    message = message + str(i[0] + 1) + '. ' + i[1][0] + ':' + ' ' + i[1][1] + ' ' + '\n'
                 update.message.reply_text(message)
 
         return ConversationHandler.END
@@ -45,13 +45,14 @@ class Postgres:
         text = update.message.text
         with psycopg2.connect("dbname=telebot user=postgres password=123") as conn:
             with conn.cursor() as cur:
-                cur.execute("""SELECT * FROM phonebook WHERE ФИО ILIKE '%%%s%%'""" % (text,), )
+                cur.execute("""SELECT Подразделение, Должность, ФИО, Телефон, Вн, Почта FROM phonebook 
+                               WHERE ФИО ILIKE '%%%s%%'""" % (text,), )
                 res = cur.fetchall()
                 if len(res) > 3:
                     update.message.reply_text(f'Уточни запрос, найдено {len(res)} записей')
                 elif len(res) != 0:
                     for i in res:
-                        update.message.reply_text(f'\n{i[1]}\n{i[2]}\n{i[3]}\n{i[4]} доб.{i[5]}\n{i[7]}')
+                        update.message.reply_text(f'\n{i[0]}\n{i[1]}\n{i[2]}\n{i[3]} доб.{i[4]}\n{i[5]}')
                 else:
                     update.message.reply_text(
                         f'По запросу "{text}" совпадений не найдено')
@@ -65,7 +66,7 @@ class Postgres:
         user_data['decision'] = text
         with psycopg2.connect("dbname=telebot user=postgres password=123") as conn:
             with conn.cursor() as cur:
-                cur.execute("""INSERT INTO faq (problem, decision) values (%s, %s) returning problem, decision""",
+                cur.execute("""INSERT INTO faq (problem, decision) VALUES (%s, %s) RETURNING problem, decision""",
                             (user_data['problem'],
                              user_data['decision']))
                 res = cur.fetchall()
@@ -81,7 +82,7 @@ class Postgres:
         user_data['url'] = text
         with psycopg2.connect("dbname=telebot user=postgres password=123") as conn:
             with conn.cursor() as cur:
-                cur.execute("""INSERT INTO materials (description, url) values (%s, %s) returning description, url""",
+                cur.execute("""INSERT INTO materials (description, url) VALUES (%s, %s) RETURNING description, url""",
                             (user_data['description'],
                              user_data['url']))
                 res = cur.fetchall()
@@ -97,7 +98,7 @@ class Postgres:
         user_data['choice'] = text
         with psycopg2.connect("dbname=telebot user=postgres password=123") as conn:
             with conn.cursor() as cur:
-                cur.execute("""DELETE FROM faq WHERE problem = %s returning problem""",
+                cur.execute("""DELETE FROM faq WHERE problem = %s RETURNING problem""",
                             (user_data['choice'],))
                 res = cur.fetchall()
                 if len(res) != 0:
@@ -116,7 +117,7 @@ class Postgres:
         user_data['choice'] = text
         with psycopg2.connect("dbname=telebot user=postgres password=123") as conn:
             with conn.cursor() as cur:
-                cur.execute("""DELETE FROM materials WHERE description = %s returning description""",
+                cur.execute("""DELETE FROM materials WHERE description = %s RETURNING description""",
                             (user_data['choice'],))
                 res = cur.fetchall()
                 if len(res) != 0:
@@ -148,35 +149,14 @@ class Postgres:
                 contacts_arr.extend([cur_arr])
         with psycopg2.connect(dbname='telebot', user='postgres', password='123') as conn:
             with conn.cursor() as cur:
-                cur.execute("""delete from phonebook""")
+                cur.execute("""TRUNCATE TABLE phonebook RESTART IDENTITY""")
                 count = 0
                 for i in contacts_arr:
-                    cur.execute("""insert into phonebook (Подразделение, Должность, ФИО, Телефон, Вн, Комн, Почта)
-                                               values (%s, %s, %s, %s, %s, %s, %s) returning ФИО""",
-                                (i[3], i[4], i[5], i[6], i[7], i[8], i[9],))
+                    cur.execute("""INSERT INTO phonebook (Подразделение, Должность, ФИО, Телефон, Вн, Комн, Почта)
+                                               values (%s, %s, %s, %s, %s, %s, %s) returning ФИО""", tuple(i[3: 10]))
                     res = cur.fetchall()
                     count += len(res)
                 update.message.reply_text(
                     f'Загружено контактов: {count}')
 
         return ConversationHandler.END
-
-    @staticmethod
-    def get_members():
-        with psycopg2.connect(dbname='telebot', user='postgres', password='123') as conn:
-            with conn.cursor() as cur:
-                cur.execute("""select user_id from members""")
-                res = cur.fetchall()
-                res_list = [x[0] for x in res]
-
-                return res_list
-
-    @staticmethod
-    def get_admins():
-        with psycopg2.connect(dbname='telebot', user='postgres', password='123') as conn:
-            with conn.cursor() as cur:
-                cur.execute("""select user_id from members where user_role = 'admin'""")
-                res = cur.fetchall()
-                res_list = [x[0] for x in res]
-
-                return res_list

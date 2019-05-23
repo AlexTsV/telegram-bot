@@ -108,7 +108,7 @@ def del_materials(bot, update):
 
 def send_invite(bot, update):
     update.message.reply_text(
-        'Ссылка-приглашение для новых участников: ', )
+        f'Ссылка-приглашение для новых участников: ', )
 
     return ConversationHandler.END
 

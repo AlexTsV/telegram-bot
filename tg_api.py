@@ -1,5 +1,6 @@
 from telethon import TelegramClient, sync
-from telethon.tl.types import ChannelParticipantsAdmins, PeerChat
+from telethon.tl import functions
+from telethon.tl.types import ChannelParticipantsAdmins
 import asyncio
 import config
 
@@ -23,6 +24,14 @@ class Telethon:
 
             return all_participants_dict
 
+    @staticmethod
+    async def get_invite_link():
+        async with TelegramClient('session_start', config.TG_API_ID, config.TG_API_HASH) as client:
+            result = await client(functions.messages.ExportChatInviteRequest(peer=config.CHAT_ID))
+            return result.stringify()
 
 loop = asyncio.get_event_loop()
 participants = loop.run_until_complete(Telethon.get_participants())
+print(participants)
+invite_link = loop.run_until_complete(Telethon.get_invite_link())
+print(invite_link)

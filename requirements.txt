@@ -1,7 +1,5 @@
 python-telegram-bot==11.1.0
-csv
 psycopg2
 telethon
 asyncio
-re
 telegram

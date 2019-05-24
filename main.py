@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import telegram
 from telegram import ReplyKeyboardMarkup
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, RegexHandler, ConversationHandler)
 import logging
@@ -7,8 +8,7 @@ from db_app import Postgres
 import config
 import tg_api
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 logger = logging.getLogger(__name__)
 
@@ -16,27 +16,8 @@ CHOOSING, TYPING_REPLY, Postgres.INSERT_FAQ_TO_DB, Postgres.INSERT_MATERIALS_TO_
 Postgres.FINISH_MATERIALS_TO_DB, Postgres.DELETE_FAQ, Postgres.DELETE_MATERIALS, Postgres.UPDATE_PHONEBOOK = range(9)
 
 reply_keyboard = [['Телефонная книга МСР МО'],
-                  ['FAQ', 'Полезные материалы'],
-                  ['Пригласить участника', 'Выход']]
-
-markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
-
-
-# loop = asyncio.get_event_loop()
-# admin_list = loop.run_until_complete(tg_api.get_admin_list())
-
-def start(bot, update):
-    user_id = update.message.from_user['id']
-    members_list = tg_api.participants['users']
-    if user_id in members_list:
-        update.message.reply_text(
-            "***Активация...***",
-            reply_markup=markup)
-
-        return CHOOSING
-    else:
-        update.message.reply_text(
-            '***AUTH PARTICIPANT: FAILED***')
+                  ['Пригласить участника', 'Полезные материалы'],
+                  ['FAQ', 'Выход']]
 
 
 def add_faq(bot, update, user_data):
@@ -99,7 +80,7 @@ def del_materials(bot, update):
     admin_list = tg_api.participants['admins']
     if admin_id in admin_list:
         update.message.reply_text(
-            "Введи точное название материала для удаления из базы", )
+            "Введи *точное* название материала для удаления из базы", parse_mode=telegram.ParseMode.MARKDOWN)
 
         return Postgres.DELETE_MATERIALS
     else:
@@ -107,10 +88,16 @@ def del_materials(bot, update):
 
 
 def send_invite(bot, update):
-    update.message.reply_text(
-        f'Ссылка-приглашение для новых участников: ', )
+    user_id = update.message.from_user['id']
+    participant_list = tg_api.participants['users']
+    if user_id in participant_list:
+        update.message.reply_text(
+            f'*Ссылка-приглашение для новых участников:* {tg_api.invite_link}', parse_mode=telegram.ParseMode.MARKDOWN)
 
-    return ConversationHandler.END
+        return ConversationHandler.END
+    else:
+        update.message.reply_text(
+            '***AUTH PARTICIPANT: FAILED***')
 
 
 def update_phonebook(bot, update):
@@ -118,7 +105,7 @@ def update_phonebook(bot, update):
     admin_list = tg_api.participants['admins']
     if admin_id in admin_list:
         update.message.reply_text(
-            "Пришли файл в формате 'CSV(разделители - запятые)'", )
+            "Пришли файл в формате *'CSV(разделители - запятые)'*", parse_mode=telegram.ParseMode.MARKDOWN)
 
         return Postgres.UPDATE_PHONEBOOK
     else:
@@ -126,10 +113,16 @@ def update_phonebook(bot, update):
 
 
 def phonebook_choice(bot, update):
-    update.message.reply_text(
-        'Введи фамилию или имя')
+    user_id = update.message.from_user['id']
+    participant_list = tg_api.participants['users']
+    if user_id in participant_list:
+        update.message.reply_text(
+            'Введи *фамилию* или *имя*', parse_mode=telegram.ParseMode.MARKDOWN)
 
-    return TYPING_REPLY
+        return TYPING_REPLY
+    else:
+        update.message.reply_text(
+            '***AUTH PARTICIPANT: FAILED***')
 
 
 def done(bot, update, user_data):
@@ -154,19 +147,19 @@ def main():
     dp = updater.dispatcher
 
     conv_handler = ConversationHandler(
-        entry_points=[CommandHandler('start', start),
-                      CommandHandler('add_faq', add_faq, pass_user_data=True),
-                      CommandHandler('add_mat', add_materials, pass_user_data=True),
-                      CommandHandler('del_faq', del_faq, pass_user_data=False),
-                      CommandHandler('del_mat', del_materials, pass_user_data=False),
-                      CommandHandler('update_pb', update_phonebook, pass_user_data=False)],
+        entry_points=[
+            CommandHandler('add_faq', add_faq, pass_user_data=True),
+            CommandHandler('add_mat', add_materials, pass_user_data=True),
+            CommandHandler('del_faq', del_faq, pass_user_data=False),
+            CommandHandler('del_mat', del_materials, pass_user_data=False),
+            CommandHandler('update_pb', update_phonebook, pass_user_data=False),
+            RegexHandler('^FAQ$', Postgres.faq_choice, pass_user_data=False),
+            RegexHandler('^Телефонная книга МСР МО$', phonebook_choice, pass_user_data=False),
+            RegexHandler('^Полезные материалы$', Postgres.materials_choice, pass_user_data=False),
+            RegexHandler('^Пригласить участника$', send_invite, pass_user_data=False),
+        ],
 
         states={
-            CHOOSING: [RegexHandler('^Телефонная книга МСР МО$', phonebook_choice, pass_user_data=False),
-                       RegexHandler('^FAQ$', Postgres.faq_choice, pass_user_data=False),
-                       RegexHandler('^Полезные материалы$', Postgres.materials_choice, pass_user_data=False),
-                       RegexHandler('^Пригласить участника$', send_invite, pass_user_data=False),
-                       ],
 
             TYPING_REPLY: [MessageHandler(Filters.text,
                                           Postgres.received_contact,

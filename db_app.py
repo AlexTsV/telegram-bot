@@ -1,6 +1,10 @@
 import psycopg2
 import csv
-from telegram.ext import (ConversationHandler)
+
+import telegram
+from telegram.ext import ConversationHandler
+
+import tg_api
 
 
 class Postgres:
@@ -16,29 +20,43 @@ class Postgres:
 
     @staticmethod
     def faq_choice(bot, update):
-        with psycopg2.connect("dbname=telebot user=postgres password=123") as conn:
-            with conn.cursor() as cur:
-                cur.execute("""SELECT problem, decision FROM faq""")
-                res = cur.fetchall()
-                message = ''
-                for i in enumerate(res):
-                    message = message + str(i[0] + 1) + '. ' + i[1][0] + '\n' + 'Решение: ' + i[1][1] + ' ' + '\n'
-                update.message.reply_text(message)
+        user_id = update.message.from_user['id']
+        participant_list = tg_api.participants['users']
+        if user_id in participant_list:
+            with psycopg2.connect("dbname=telebot user=postgres password=123") as conn:
+                with conn.cursor() as cur:
+                    cur.execute("""SELECT problem, decision FROM faq""")
+                    res = cur.fetchall()
+                    message = ''
+                    for i in enumerate(res):
+                        string = f'\n*{str(i[0] + 1)}.* *Проблема:*  {i[1][0]}\n     *Решение:*  {i[1][1]}'
+                        message = message +string
+                    update.message.reply_text(message, parse_mode=telegram.ParseMode.MARKDOWN)
 
-        return ConversationHandler.END
+            return ConversationHandler.END
+        else:
+            update.message.reply_text(
+                '***AUTH PARTICIPANT: FAILED***')
 
     @staticmethod
     def materials_choice(bot, update):
-        with psycopg2.connect("dbname=telebot user=postgres password=123") as conn:
-            with conn.cursor() as cur:
-                cur.execute("""SELECT description, url FROM materials""")
-                res = cur.fetchall()
-                message = ''
-                for i in enumerate(res):
-                    message = message + str(i[0] + 1) + '. ' + i[1][0] + ':' + ' ' + i[1][1] + ' ' + '\n'
-                update.message.reply_text(message)
+        user_id = update.message.from_user['id']
+        participant_list = tg_api.participants['users']
+        if user_id in participant_list:
+            with psycopg2.connect("dbname=telebot user=postgres password=123") as conn:
+                with conn.cursor() as cur:
+                    cur.execute("""SELECT description, url FROM materials""")
+                    res = cur.fetchall()
+                    message = ''
+                    for i in enumerate(res):
+                        string = f'*{str(i[0] + 1)}.* *{i[1][0]}:*  {i[1][1]}'
+                        message = message + string
+                    update.message.reply_text(message, parse_mode=telegram.ParseMode.MARKDOWN)
 
-        return ConversationHandler.END
+            return ConversationHandler.END
+        else:
+            update.message.reply_text(
+                '***AUTH PARTICIPANT: FAILED***')
 
     @staticmethod
     def received_contact(bot, update, user_data):

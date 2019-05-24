@@ -3,9 +3,11 @@ from telethon.tl import functions
 from telethon.tl.types import ChannelParticipantsAdmins
 import asyncio
 import config
+import re
 
 
 class Telethon:
+
     @staticmethod
     async def get_participants():
         async with TelegramClient('session_start', config.TG_API_ID, config.TG_API_HASH) as client:
@@ -28,10 +30,14 @@ class Telethon:
     async def get_invite_link():
         async with TelegramClient('session_start', config.TG_API_ID, config.TG_API_HASH) as client:
             result = await client(functions.messages.ExportChatInviteRequest(peer=config.CHAT_ID))
-            return result.stringify()
+            chat_invite_export = result.stringify()
+            regex = r"https:\//[a-zA-Z1-90./]+"
+            matches = re.search(regex, chat_invite_export)
+            invite_link = matches.group()
+
+            return invite_link
+
 
 loop = asyncio.get_event_loop()
 participants = loop.run_until_complete(Telethon.get_participants())
-print(participants)
 invite_link = loop.run_until_complete(Telethon.get_invite_link())
-print(invite_link)

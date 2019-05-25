@@ -1,11 +1,8 @@
 import psycopg2
 import csv
-
 import telegram
 from telegram.ext import ConversationHandler
-
 import tg_api
-
 import config
 
 
@@ -111,7 +108,6 @@ class Postgres:
                     f'Всё ОК!\nМатериал: {res[0][0]}\nСсылка: {res[0][1]}')
         user_data.clear()
 
-
     @staticmethod
     def delete_faq_from_db_1(bot, update, user_data):
         text = update.message.text
@@ -147,7 +143,6 @@ class Postgres:
                     update.message.reply_text(
                         f"Такого материала в базе не существует:\n{user_data['choice']}")
         user_data.clear()
-
 
     @staticmethod
     def download_and_update_phonebook(bot, update, user_data):

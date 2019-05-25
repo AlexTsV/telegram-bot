@@ -6,6 +6,8 @@ from telegram.ext import ConversationHandler
 
 import tg_api
 
+import config
+
 
 class Postgres:
     FINISH_FAQ_TO_DB, FINISH_MATERIALS_TO_DB, INSERT_FAQ_TO_DB, INSERT_MATERIALS_TO_DB, DELETE_MATERIALS, DELETE_FAQ, \
@@ -23,7 +25,7 @@ class Postgres:
         user_id = update.message.from_user['id']
         participant_list = tg_api.participants['users']
         if user_id in participant_list:
-            with psycopg2.connect("dbname=telebot user=postgres password=123") as conn:
+            with psycopg2.connect(f"dbname=telebot user=postgres password={config.PASS}") as conn:
                 with conn.cursor() as cur:
                     cur.execute("""SELECT problem, decision FROM faq""")
                     res = cur.fetchall()
@@ -43,7 +45,7 @@ class Postgres:
         user_id = update.message.from_user['id']
         participant_list = tg_api.participants['users']
         if user_id in participant_list:
-            with psycopg2.connect("dbname=telebot user=postgres password=123") as conn:
+            with psycopg2.connect(f"dbname=telebot user=postgres password={config.PASS}") as conn:
                 with conn.cursor() as cur:
                     cur.execute("""SELECT description, url FROM materials""")
                     res = cur.fetchall()
@@ -61,7 +63,7 @@ class Postgres:
     @staticmethod
     def received_contact(bot, update, user_data):
         text = update.message.text
-        with psycopg2.connect("dbname=telebot user=postgres password=123") as conn:
+        with psycopg2.connect(f"dbname=telebot user=postgres password={config.PASS}") as conn:
             with conn.cursor() as cur:
                 cur.execute("""SELECT Подразделение, Должность, ФИО, Телефон, Вн, Почта FROM phonebook 
                                WHERE ФИО ILIKE '%%%s%%'""" % (text,), )
@@ -83,7 +85,7 @@ class Postgres:
     def insert_faq_to_db(bot, update, user_data):
         text = update.message.text
         user_data['decision'] = text
-        with psycopg2.connect("dbname=telebot user=postgres password=123") as conn:
+        with psycopg2.connect(f"dbname=telebot user=postgres password={config.PASS}") as conn:
             with conn.cursor() as cur:
                 cur.execute("""INSERT INTO faq (problem, decision) VALUES (%s, %s) RETURNING problem, decision""",
                             (user_data['problem'],
@@ -99,7 +101,7 @@ class Postgres:
     def insert_materials_to_db(bot, update, user_data):
         text = update.message.text
         user_data['url'] = text
-        with psycopg2.connect("dbname=telebot user=postgres password=123") as conn:
+        with psycopg2.connect(f"dbname=telebot user=postgres password={config.PASS}") as conn:
             with conn.cursor() as cur:
                 cur.execute("""INSERT INTO materials (description, url) VALUES (%s, %s) RETURNING description, url""",
                             (user_data['description'],
@@ -109,13 +111,12 @@ class Postgres:
                     f'Всё ОК!\nМатериал: {res[0][0]}\nСсылка: {res[0][1]}')
         user_data.clear()
 
-        return ConversationHandler.END
 
     @staticmethod
     def delete_faq_from_db_1(bot, update, user_data):
         text = update.message.text
         user_data['choice'] = text
-        with psycopg2.connect("dbname=telebot user=postgres password=123") as conn:
+        with psycopg2.connect(f"dbname=telebot user=postgres password={config.PASS}") as conn:
             with conn.cursor() as cur:
                 cur.execute("""DELETE FROM faq WHERE problem = %s RETURNING problem""",
                             (user_data['choice'],))
@@ -134,7 +135,7 @@ class Postgres:
     def delete_materials_from_db(bot, update, user_data):
         text = update.message.text
         user_data['choice'] = text
-        with psycopg2.connect("dbname=telebot user=postgres password=123") as conn:
+        with psycopg2.connect(f"dbname=telebot user=postgres password={config.PASS}") as conn:
             with conn.cursor() as cur:
                 cur.execute("""DELETE FROM materials WHERE description = %s RETURNING description""",
                             (user_data['choice'],))
@@ -147,7 +148,6 @@ class Postgres:
                         f"Такого материала в базе не существует:\n{user_data['choice']}")
         user_data.clear()
 
-        return ConversationHandler.END
 
     @staticmethod
     def download_and_update_phonebook(bot, update, user_data):
@@ -166,7 +166,7 @@ class Postgres:
                 str = ''.join(row)
                 cur_arr = str.split(';')
                 contacts_arr.extend([cur_arr])
-        with psycopg2.connect(dbname='telebot', user='postgres', password='123') as conn:
+        with psycopg2.connect(f"dbname=telebot user=postgres password={config.PASS}") as conn:
             with conn.cursor() as cur:
                 cur.execute("""TRUNCATE TABLE phonebook RESTART IDENTITY""")
                 count = 0

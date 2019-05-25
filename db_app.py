@@ -29,8 +29,8 @@ class Postgres:
                     res = cur.fetchall()
                     message = ''
                     for i in enumerate(res):
-                        string = f'\n*{str(i[0] + 1)}.* *Проблема:*  {i[1][0]}\n     *Решение:*  {i[1][1]}'
-                        message = message +string
+                        string = f'*{str(i[0] + 1)}.* *Проблема:*  {i[1][0]}\n    *Решение:*  {i[1][1]}\n'
+                        message += string
                     update.message.reply_text(message, parse_mode=telegram.ParseMode.MARKDOWN)
 
             return ConversationHandler.END
@@ -49,8 +49,8 @@ class Postgres:
                     res = cur.fetchall()
                     message = ''
                     for i in enumerate(res):
-                        string = f'*{str(i[0] + 1)}.* *{i[1][0]}:*  {i[1][1]}'
-                        message = message + string
+                        string = f'*\n{str(i[0] + 1)}.* *{i[1][0]}:* {i[1][1]}'
+                        message += string
                     update.message.reply_text(message, parse_mode=telegram.ParseMode.MARKDOWN)
 
             return ConversationHandler.END
@@ -67,10 +67,11 @@ class Postgres:
                                WHERE ФИО ILIKE '%%%s%%'""" % (text,), )
                 res = cur.fetchall()
                 if len(res) > 3:
-                    update.message.reply_text(f'Уточни запрос, найдено {len(res)} записей')
+                    update.message.reply_text(f'Уточни запрос, найдено записей: {len(res)}')
                 elif len(res) != 0:
                     for i in res:
-                        update.message.reply_text(f'\n{i[0]}\n{i[1]}\n{i[2]}\n{i[3]} доб.{i[4]}\n{i[5]}')
+                        update.message.reply_text(f'\n{i[0]}\n{i[1]}\n*{i[2]}*\n{i[3]} доб.{i[4]}\n{i[5]}',
+                                                  parse_mode=telegram.ParseMode.MARKDOWN)
                 else:
                     update.message.reply_text(
                         f'По запросу "{text}" совпадений не найдено')

@@ -12,8 +12,8 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 logger = logging.getLogger(__name__)
 
-CHOOSING, TYPING_REPLY, Postgres.INSERT_FAQ_TO_DB, Postgres.INSERT_MATERIALS_TO_DB, Postgres.FINISH_FAQ_TO_DB, \
-Postgres.FINISH_MATERIALS_TO_DB, Postgres.DELETE_FAQ, Postgres.DELETE_MATERIALS, Postgres.UPDATE_PHONEBOOK = range(9)
+TYPING_REPLY, Postgres.INSERT_FAQ_TO_DB, Postgres.INSERT_MATERIALS_TO_DB, Postgres.FINISH_FAQ_TO_DB, \
+Postgres.FINISH_MATERIALS_TO_DB, Postgres.DELETE_FAQ, Postgres.DELETE_MATERIALS, Postgres.UPDATE_PHONEBOOK = range(8)
 
 reply_keyboard = [['Телефонная книга МСР МО'],
                   ['Пригласить участника', 'Полезные материалы'],
@@ -88,16 +88,16 @@ def del_materials(bot, update):
 
 
 def send_invite(bot, update):
-    user_id = update.message.from_user['id']
-    participant_list = tg_api.participants['users']
-    if user_id in participant_list:
+    admin_id = update.message.from_user['id']
+    admin_list = tg_api.participants['admins']
+    if admin_id in admin_list:
         update.message.reply_text(
             f'*Ссылка-приглашение для новых участников:* {tg_api.invite_link}', parse_mode=telegram.ParseMode.MARKDOWN)
 
         return ConversationHandler.END
     else:
         update.message.reply_text(
-            '***AUTH PARTICIPANT: FAILED***')
+            '***AUTH ADMIN: FAILED***')
 
 
 def update_phonebook(bot, update):
@@ -126,19 +126,14 @@ def phonebook_choice(bot, update):
 
 
 def done(bot, update, user_data):
-    if 'choice' in user_data:
-        del user_data['choice']
-
-    update.message.reply_text(
-        "***Деактивация...***")
-
     user_data.clear()
+
     return ConversationHandler.END
 
 
 def error(bot, update, error):
     """Log Errors caused by Updates."""
-    logger.warning('Update "%s" caused error "%s"', update, error)
+    logger.warning(f'Update {update} caused error {error}')
 
 
 def main():
@@ -206,6 +201,8 @@ def main():
                                         ],
 
         },
+
+        conversation_timeout=180,
 
         fallbacks=[RegexHandler('^Выход$', done, pass_user_data=True)]
     )

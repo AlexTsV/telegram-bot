@@ -9,3 +9,7 @@ CHAT_ID = 'https://t.me/joinchat/E5vPV0PVJZTSiPhGUCKVLw'
 # CHAT_ID = "-1001138042260"
 
 DB_PASS = '6dSf3&`YIk\7LmQ"_zBb'
+
+
+
+

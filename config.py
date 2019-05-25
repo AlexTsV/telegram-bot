@@ -1,14 +1,19 @@
-BOT_TOKEN = '758306079:AAEAL86jzh6_eowV8Ay6gTQ2cLUmNIrbujk'
+BOT_TOKEN = ''
 
-TG_API_ID = 780919
+TG_API_ID = ''
 
-TG_API_HASH = '5e4ebadc59ba54fc060dd575a0775b92'
+TG_API_HASH = ''
 
-CHAT_ID = 'https://t.me/joinchat/E5vPV0PVJZTSiPhGUCKVLw'
+CHAT_ID = ''
 
-# CHAT_ID = "-1001138042260"
+DB_PASS = ''
 
-DB_PASS = '6dSf3&`YIk\7LmQ"_zBb'
+DB_HOST = 'ec2-50-17-246-114.compute-1.amazonaws.com'
+
+DB_NAME = 'd1himk5nf6qlu1'
+
+USER = 'hkrjksrywutriz'
+
 
 
 

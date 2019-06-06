@@ -15,10 +15,6 @@ logger = logging.getLogger(__name__)
 TYPING_REPLY, Postgres.INSERT_FAQ_TO_DB, Postgres.INSERT_MATERIALS_TO_DB, Postgres.FINISH_FAQ_TO_DB, \
 Postgres.FINISH_MATERIALS_TO_DB, Postgres.DELETE_FAQ, Postgres.DELETE_MATERIALS, Postgres.UPDATE_PHONEBOOK = range(8)
 
-reply_keyboard = [['Телефонная книга МСР МО'],
-                  ['Пригласить участника', 'Полезные материалы'],
-                  ['FAQ', 'Выход']]
-
 
 def add_faq(bot, update, user_data):
     admin_id = update.message.from_user['id']
@@ -66,9 +62,10 @@ def add_materials(bot, update, user_data):
 
 def del_faq(bot, update):
     admin_id = update.message.from_user['id']
-    if admin_id in tg_api.participants['admins']:
+    admin_list = tg_api.participants['admins']
+    if admin_id in admin_list:
         update.message.reply_text(
-            "Введи точное описание проблемы для удаления из базы", )
+            "Введи точное описание проблемы для удаления из базы", parse_mode=telegram.ParseMode.MARKDOWN)
 
         return Postgres.DELETE_FAQ
     else:
@@ -148,10 +145,10 @@ def main():
             CommandHandler('del_faq', del_faq, pass_user_data=False),
             CommandHandler('del_mat', del_materials, pass_user_data=False),
             CommandHandler('update_pb', update_phonebook, pass_user_data=False),
-            RegexHandler('^FAQ$', Postgres.faq_choice, pass_user_data=False),
-            RegexHandler('^Телефонная книга МСР МО$', phonebook_choice, pass_user_data=False),
-            RegexHandler('^Полезные материалы$', Postgres.materials_choice, pass_user_data=False),
-            RegexHandler('^Пригласить участника$', send_invite, pass_user_data=False),
+            CommandHandler('faq', Postgres.faq_choice, pass_user_data=False),
+            CommandHandler('phonebook', phonebook_choice, pass_user_data=False),
+            CommandHandler('manual', Postgres.materials_choice, pass_user_data=False),
+            CommandHandler('send_invite', send_invite, pass_user_data=False),
         ],
 
         states={

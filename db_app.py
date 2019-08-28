@@ -28,7 +28,7 @@ class Postgres:
                     res = cur.fetchall()
                     message = ''
                     for i in enumerate(res):
-                        string = f'*{str(i[0] + 1)}.* *Проблема:*  {i[1][0]}\n    *Решение:*  {i[1][1]}\n'
+                        string = f'*{str(i[0] + 1)}.* *Проблема:*  {i[1][0]}\n     *Решение:*  {i[1][1]}\n'
                         message += string
                     update.message.reply_text(message, parse_mode=telegram.ParseMode.MARKDOWN)
 

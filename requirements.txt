@@ -9,7 +9,7 @@ pyaes==1.6.1
 pyasn1==0.4.5
 pycparser==2.19
 python-telegram-bot==11.1.0
-rsa==4.0
+rsa==4.7
 six==1.12.0
 telegram==0.0.1
 Telethon==1.7.7
